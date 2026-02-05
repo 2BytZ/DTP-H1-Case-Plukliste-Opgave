@@ -70,10 +70,11 @@ namespace Plukliste
                         switch (item.ProductID)
                         {
                             case "PRINT-OPGRADE":
+                                string newHTMLData;
                                 string htmlData = File.ReadAllText(@"templates\\PRINT-OPGRADE.html");
-                                string newHTML = htmlData.Replace("[Adresse]", $"{plukliste.Adresse}");
-                                newHTML = htmlData.Replace("[Name]", $"{plukliste.Name}");
-                                newHTML = htmlData.Replace("[Plukliste]", $"{plukliste.Lines}");
+                                newHTMLData = htmlData.Replace("[Name]", plukliste.Name);
+                                newHTMLData = newHTMLData.Replace("[Adresse]", plukliste.Adresse);
+                                newHTMLData = newHTMLData.Replace("[Plukliste]", PrintPluklistItems(plukliste));
                                 break;
 
                         }
@@ -156,6 +157,15 @@ namespace Plukliste
                         return;
                 }
             }
+        }
+        static string PrintPluklistItems(Pluklist? plukliste)
+        {
+            string result = "";
+            foreach (var item in plukliste.Lines)
+            {
+                result += $"<p>{item.Amount}x {item.Title} ({item.ProductID})</p>\n";
+            }
+            return result;
         }
     }
 }
