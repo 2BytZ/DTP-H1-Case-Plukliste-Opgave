@@ -6,7 +6,6 @@ namespace Plukliste
 {
     class PluklisteProgram
     {
-
         static void Main()
         {
             ConsoleKeyInfo key;
@@ -61,23 +60,6 @@ namespace Plukliste
                     foreach (var item in plukliste.Lines)
                     {
                         Console.WriteLine("{0,-7}{1,-9}{2,-20}{3}", item.Amount, item.Type, item.ProductID, item.Title);
-                    }
-                }
-                foreach (var item in plukliste.Lines)
-                {
-                    if (item.Type == ItemType.Print)
-                    {
-                        switch (item.ProductID)
-                        {
-                            case "PRINT-OPGRADE":
-                                string newHTMLData;
-                                string htmlData = File.ReadAllText(@"templates\\PRINT-OPGRADE.html");
-                                newHTMLData = htmlData.Replace("[Name]", plukliste.Name);
-                                newHTMLData = newHTMLData.Replace("[Adresse]", plukliste.Adresse);
-                                newHTMLData = newHTMLData.Replace("[Plukliste]", PrintPluklistItems(plukliste));
-                                break;
-
-                        }
                     }
                     file.Close();
                     Console.WriteLine("\n\nOptions:");
@@ -145,6 +127,39 @@ namespace Plukliste
                         Console.WriteLine("Pluklister genindlæst");
                         goto InitFile;
                     case "Afslut plukseddel":
+                        foreach (var item in plukliste.Lines)
+                        {
+                            if (item.Type == ItemType.Print)
+                            {
+                                switch (item.ProductID)
+                                {
+                                    case "PRINT-OPGRADE":
+                                        string newHTMLData;
+                                        string htmlData = File.ReadAllText(@"templates\\PRINT-OPGRADE.html");
+                                        newHTMLData = htmlData.Replace("[Name]", plukliste.Name);
+                                        newHTMLData = newHTMLData.Replace("[Adresse]", plukliste.Adresse);
+                                        newHTMLData = newHTMLData.Replace("[Plukliste]", PrintPluklistItems(plukliste));
+                                        File.WriteAllText($@"print\\{item.ProductID}.html", newHTMLData);
+                                        break;
+
+                                    case "PRINT-OPSIGELSE":
+                                        htmlData = File.ReadAllText(@"templates\\PRINT-OPGRADE.html");
+                                        newHTMLData = htmlData.Replace("[Name]", plukliste.Name);
+                                        newHTMLData = newHTMLData.Replace("[Adresse]", plukliste.Adresse);
+                                        newHTMLData = newHTMLData.Replace("[Plukliste]", PrintPluklistItems(plukliste));
+                                        File.WriteAllText($@"print\\{item.ProductID}.html", newHTMLData);
+                                        break;
+
+                                    case "PRINT-WELCOME":
+                                        htmlData = File.ReadAllText(@"templates\\PRINT-OPGRADE.html");
+                                        newHTMLData = htmlData.Replace("[Name]", plukliste.Name);
+                                        newHTMLData = newHTMLData.Replace("[Adresse]", plukliste.Adresse);
+                                        newHTMLData = newHTMLData.Replace("[Plukliste]", PrintPluklistItems(plukliste));
+                                        File.WriteAllText($@"print\\{item.ProductID}.html", newHTMLData);
+                                        break;
+                                }
+                            }
+                        }
                         //Move files to import directory
                         var filewithoutPath = files[index].Substring(files[index].LastIndexOf('\\'));
                         File.Move(files[index], string.Format(@"import\\{0}", filewithoutPath));
