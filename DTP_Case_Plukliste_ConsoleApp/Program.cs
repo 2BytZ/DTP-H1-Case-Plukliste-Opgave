@@ -4,36 +4,37 @@ using System.Linq.Expressions;
 using System.Xml.Serialization;
 using CsvHelper.Configuration;
 using CsvHelper;
-namespace Plukliste
+using System.IO;
 
+namespace Plukliste
 {
     class PluklisteProgram
     {
         static void Main()
         {
+            var fileService = new FileService();
+            var templateRender = new TemplateRenderer();
+
             ConsoleKeyInfo key;
             List<string> files = new List<string>();
             List<string> templates = new List<string>();
             int index = 0;
-            Directory.CreateDirectory("import");
 
-            Directory.CreateDirectory("print");
-
-            if (!Directory.Exists("export"))
+            if (!fileService.ExportExists())
             {
-                Console.WriteLine("Folder not found.");
+                Console.WriteLine("(!) Folder not found.");
                 Console.WriteLine(Directory.GetCurrentDirectory() + "/export");
                 return;
             }
-            files = Directory.EnumerateFiles("export").ToList();
+            files = fileService.GetExportFiles();
 
-            if (!Directory.Exists("templates"))
+            if (!fileService.TemplateExists())
             {
-                Console.WriteLine("Folder not found.");
+                Console.WriteLine("(!) Folder not found.");
                 Console.WriteLine(Directory.GetCurrentDirectory() + "/templates");
                 return;
             }
-            templates = Directory.EnumerateFiles("templates").ToList();
+            templates = fileService.GetTemplates();
 
             Pluklist? plukliste;
         //ACT
