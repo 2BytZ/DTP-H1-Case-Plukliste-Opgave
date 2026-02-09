@@ -1,3 +1,6 @@
 <Solution>
   <Project Path="DTP_Case_Plukliste_ConsoleApp/DTP_Case_Plukliste_ConsoleApp.csproj" />
+  <Project Path="FKTV/FKTV.csproj" Id="5058ba73-1738-428f-b66d-34b98a5ba4ed" />
+  <Project Path="FKTV_BLL/FKTV_BLL.csproj" Id="3d6513fd-d843-4366-884b-4b874a66c4ee" />
+  <Project Path="FKTV_DAL/FKTV_DAL.csproj" Id="af1a49d5-8c95-4316-bb3c-1bccbeff62fb" />
 </Solution>

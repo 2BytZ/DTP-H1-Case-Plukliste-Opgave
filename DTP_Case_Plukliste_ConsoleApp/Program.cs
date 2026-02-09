@@ -1,4 +1,5 @@
 ﻿//Eksempel på funktionel kodning hvor der kun bliver brugt et model lag
+using FKTV_BLL;
 using System.Linq.Expressions;
 using System.Xml.Serialization;
 namespace Plukliste
@@ -10,6 +11,7 @@ namespace Plukliste
         static void Main()
         {
             ConsoleKeyInfo key;
+            var plukliste = new Pluklist();
             List<string> files = new List<string>();
             int index = 0;
             Directory.CreateDirectory("import");
@@ -36,7 +38,7 @@ namespace Plukliste
 
                 FileStream file = File.OpenRead(files[index]);
                 XmlSerializer xmlSerializer = new XmlSerializer(typeof(Pluklist));
-                var plukliste = (Pluklist?)xmlSerializer.Deserialize(file);
+                plukliste = (Pluklist?)xmlSerializer.Deserialize(file);
 
                 if (plukliste != null && plukliste.Lines != null)
                 {
@@ -116,6 +118,12 @@ namespace Plukliste
                     Console.WriteLine("Pluklister genindlæst");
                     goto InitFile;
                 case "Afslut plukseddel":
+                    //Update storage
+                    ItemsRepository itemsRepository = new ItemsRepository();
+                    foreach (var line in plukliste.Lines)
+                    {
+                        itemsRepository.UpdateAmount(line.ProductID, line.Amount, true);
+                    }
                     //Move files to import directory
                     var filewithoutPath = files[index].Substring(files[index].LastIndexOf('\\'));
                     File.Move(files[index], string.Format(@"import\\{0}", filewithoutPath));
