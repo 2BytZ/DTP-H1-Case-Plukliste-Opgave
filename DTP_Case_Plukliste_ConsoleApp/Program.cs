@@ -1,4 +1,4 @@
-﻿//Eksempel på funktionel kodning hvor der kun bliver brugt et model lag
+﻿//De kørende montører; CSV til plukliste XML og vice versa
 using System.Linq.Expressions;
 using System.Xml.Serialization;
 namespace Plukliste
