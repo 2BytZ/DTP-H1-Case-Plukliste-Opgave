@@ -1,4 +1,6 @@
-﻿namespace Plukliste;
+﻿using CsvHelper.Configuration.Attributes;
+
+namespace Plukliste;
 
 public class Pluklist
 {

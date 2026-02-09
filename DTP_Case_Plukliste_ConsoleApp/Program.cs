@@ -1,6 +1,9 @@
-﻿//De kørende montører; CSV til plukliste XML og vice versa
+﻿//De kørende montører; CSV til plukliste
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Xml.Serialization;
+using CsvHelper.Configuration;
+using CsvHelper;
 namespace Plukliste
 
 {
@@ -45,10 +48,33 @@ namespace Plukliste
             {
                 Console.WriteLine($"Plukliste {index + 1} af {files.Count}");
                 Console.WriteLine($"file: {files[index]}");
-
+                
                 FileStream file = File.OpenRead(files[index]);
-                XmlSerializer xmlSerializer = new XmlSerializer(typeof(Pluklist));
-                plukliste = (Pluklist?)xmlSerializer.Deserialize(file);
+                if (Path.GetExtension(files[index]).ToUpper() == ".CSV")
+                {
+                    var model = File.ReadAllLines(files[index])
+                        .Skip(1)
+                        .Select(v => v.Split(';'))
+                        .Select(dataRow => new Item
+                        {
+                            Amount = int.Parse(dataRow[3]),
+                            Type = (ItemType)Enum.Parse(typeof(ItemType), dataRow[1]),
+                            ProductID = dataRow[0],
+                            Title = dataRow[2]
+                        }).ToList();
+                    plukliste = new Pluklist
+                    {
+                        Name = files[index].Substring(files[index].IndexOf("_") + 1).Replace("_", " ").Replace(".csv".ToUpper(), ""),
+                        Forsendelse = "Pickup",
+                        Lines = model
+                    };
+                }
+                else
+                {
+                    XmlSerializer xmlSerializer = new XmlSerializer(typeof(Pluklist));
+                    plukliste = (Pluklist?)xmlSerializer.Deserialize(file);
+                }
+
 
                 if (plukliste != null && plukliste.Lines != null)
                 {

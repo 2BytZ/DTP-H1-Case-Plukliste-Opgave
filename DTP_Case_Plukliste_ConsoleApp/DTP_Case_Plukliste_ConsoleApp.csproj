@@ -18,6 +18,9 @@
 		<Folder Include="templates\" />
 	</ItemGroup>
 	<ItemGroup>
+	  <PackageReference Include="CsvHelper" Version="33.1.0" />
+	</ItemGroup>
+	<ItemGroup>
 		<None Update="templates\*.*">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
