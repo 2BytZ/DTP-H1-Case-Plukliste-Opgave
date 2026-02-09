@@ -1,10 +1,14 @@
 ﻿//De kørende montører; CSV til plukliste
+using System;
 using System.Globalization;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Xml.Serialization;
 using CsvHelper.Configuration;
 using CsvHelper;
 using System.IO;
+using DTP_Case_Plukliste_ConsoleApp;
+using System.Collections.Generic;
 
 namespace Plukliste
 {
@@ -14,11 +18,7 @@ namespace Plukliste
         {
             var fileService = new FileService();
             var templateRender = new TemplateRenderer();
-
-            ConsoleKeyInfo key;
-            List<string> files = new List<string>();
-            List<string> templates = new List<string>();
-            int index = 0;
+            var ui = new ConsoleUi();
 
             if (!fileService.ExportExists())
             {
@@ -26,7 +26,6 @@ namespace Plukliste
                 Console.WriteLine(Directory.GetCurrentDirectory() + "/export");
                 return;
             }
-            files = fileService.GetExportFiles();
 
             if (!fileService.TemplateExists())
             {
@@ -34,180 +33,138 @@ namespace Plukliste
                 Console.WriteLine(Directory.GetCurrentDirectory() + "/templates");
                 return;
             }
-            templates = fileService.GetTemplates();
 
-            Pluklist? plukliste;
-        //ACT
-
-        InitFile:
-            Console.Clear();
-            if (files.Count == 0)
+            var parsers = new IPluklistParser[]
             {
-                Console.WriteLine("No files found.");
-            }
-            else
-            {
-                Console.WriteLine($"Plukliste {index + 1} af {files.Count}");
-                Console.WriteLine($"file: {files[index]}");
-                
-                FileStream file = File.OpenRead(files[index]);
-                if (Path.GetExtension(files[index]).ToUpper() == ".CSV")
-                {
-                    var model = File.ReadAllLines(files[index])
-                        .Skip(1)
-                        .Select(v => v.Split(';'))
-                        .Select(dataRow => new Item
-                        {
-                            Amount = int.Parse(dataRow[3]),
-                            Type = (ItemType)Enum.Parse(typeof(ItemType), dataRow[1]),
-                            ProductID = dataRow[0],
-                            Title = dataRow[2]
-                        }).ToList();
-                    plukliste = new Pluklist
-                    {
-                        Name = files[index].Substring(files[index].IndexOf("_") + 1).Replace("_", " ").Replace(".csv".ToUpper(), ""),
-                        Forsendelse = "Pickup",
-                        Lines = model
-                    };
-                }
-                else
-                {
-                    XmlSerializer xmlSerializer = new XmlSerializer(typeof(Pluklist));
-                    plukliste = (Pluklist?)xmlSerializer.Deserialize(file);
-                }
-
-
-                if (plukliste != null && plukliste.Lines != null)
-                {
-                    Console.WriteLine("\n{0, -13}{1}", "Name:", plukliste.Name);
-                    Console.WriteLine("{0, -13}{1}", "Forsendelse:", plukliste.Forsendelse);
-                    //TODO: Add adresse to screen print
-
-                    Console.WriteLine("\n{0,-7}{1,-9}{2,-20}{3}", "Antal", "Type", "Produktnr.", "Navn");
-                    foreach (var item in plukliste.Lines)
-                    {
-                        Console.WriteLine("{0,-7}{1,-9}{2,-20}{3}", item.Amount, item.Type, item.ProductID, item.Title);
-                    }
-                    file.Close();
-                    Console.WriteLine("\n\nOptions:");
-                }
-                //Print options
-                int optionSelected = 0;
-                bool isConfirmed = false;
-                string cursor = "<-";
-                (int right, int top) = Console.GetCursorPosition();
-                List<string> options = new List<string>
-            {
-                "Forrige plukseddel",
-                "Naeste plukseddel",
-                "Genindlaes pluksedler",
-                "Afslut plukseddel",
-                "Quit"
+                    new CsvPluklistParser(),
+                    new XmlPluklistParser()
             };
-                if (index >= 0 == false)
-                {
-                    options.Remove("Afslut plukseddel");
-                }
-                if (index > 0 == false)
-                {
-                    options.Remove("Forrige plukseddel");
-                }
-                if (index < files.Count - 1 == false)
-                {
-                    options.Remove("Naeste plukseddel");
-                }
-                while (!isConfirmed)
-                {
-                    Console.SetCursorPosition(right, top);
 
-                    for (int i = 0; i < options.Count; i++)
-                    {
-                        Console.WriteLine(options[i] + $"{(optionSelected == options.IndexOf(options[i]) ? cursor : "  ")}");
-                    }
-                    key = Console.ReadKey(true);
+            var templateMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    { "PRINT-OPGRADE", "PRINT-OPGRADE.html" },
+                    { "PRINT-OPSIGELSE", "PRINT-OPGRADE.html" },
+                    { "PRINT-WELCOME", "PRINT-OPGRADE.html" }
+                };
 
-                    switch (key.Key)
-                    {
-                        case ConsoleKey.DownArrow:
-                            optionSelected = (optionSelected == options.Count - 1 ? 0 : optionSelected + 1);
-                            break;
-                        case ConsoleKey.UpArrow:
-                            optionSelected = (optionSelected == 0 ? options.Count - 1 : optionSelected - 1);
-                            break;
-                        case ConsoleKey.Enter:
-                            isConfirmed = true;
-                            break;
-                    }
-                    Console.SetCursorPosition(right, top);
+            var files = fileService.GetExportFiles().ToList();
+            int index = 0;
+
+            while (files.Count > 0)
+            {
+                var filePath = files[index];
+
+                // choose parser for file
+                var parser = parsers.FirstOrDefault(p => p.CanParse(filePath));
+                if (parser == null)
+                {
+                    Console.WriteLine("(!) Unsupported file format. Skipping..");
+                    files.RemoveAt(index);
+                    if (index >= files.Count) index = Math.Max(0, files.Count - 1);
+                    continue;
                 }
-                switch (options[optionSelected])
+
+                Pluklist? plukliste;
+                try
+                {
+                    plukliste = parser.Parse(filePath);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to parse file: {ex.Message}");
+                    files.RemoveAt(index);
+                    if (index >= files.Count) index = Math.Max(0, files.Count - 1);
+                    Console.WriteLine("Press any key to continue...");
+                    Console.ReadKey(true);
+                    continue;
+                }
+
+                // display via UI
+                ui.DisplayPluklist(plukliste, filePath, index, files.Count);
+
+                // build and prune options
+                var options = new List<string>
+                    {
+                        "Forrige plukseddel",
+                        "Naeste plukseddel",
+                        "Genindlaes pluksedler",
+                        "Afslut plukseddel",
+                        "Quit"
+                    };
+                var availableOptions = new List<string>(options);
+                if (index <= 0) availableOptions.Remove("Forrige plukseddel");
+                if (index >= files.Count - 1) availableOptions.Remove("Naeste plukseddel");
+
+                var selectedIndex = ui.ShowMenu(availableOptions);
+                var choice = availableOptions[selectedIndex];
+
+                switch (choice)
                 {
                     case "Forrige plukseddel":
                         if (index > 0) index--;
-                        goto InitFile;
+                        break;
+
                     case "Naeste plukseddel":
                         if (index < files.Count - 1) index++;
-                        goto InitFile;
+                        break;
+
                     case "Genindlaes pluksedler":
-                        files = Directory.EnumerateFiles("export").ToList();
+                        files = fileService.GetExportFiles().ToList();
                         index = 0;
                         Console.WriteLine("Pluklister genindlæst");
-                        goto InitFile;
+                        Console.WriteLine("Press any key to continue...");
+                        Console.ReadKey(true);
+                        break;
+
                     case "Afslut plukseddel":
-                        foreach (var item in plukliste.Lines)
+                        if (plukliste?.Lines != null)
                         {
-                            if (item.Type == ItemType.Print)
+                            foreach (var item in plukliste.Lines.Where(l => l.Type == ItemType.Print))
                             {
-                                switch (item.ProductID)
+                                var templateName = templateMap.TryGetValue(item.ProductID, out var t) ? t : "PRINT-OPGRADE.html";
+                                try
                                 {
-                                    case "PRINT-OPGRADE":
-                                        string newHTMLData;
-                                        string htmlData = File.ReadAllText(@"templates\\PRINT-OPGRADE.html");
-                                        newHTMLData = htmlData.Replace("[Name]", plukliste.Name);
-                                        newHTMLData = newHTMLData.Replace("[Adresse]", plukliste.Adresse);
-                                        newHTMLData = newHTMLData.Replace("[Plukliste]", PrintPluklistItems(plukliste));
-                                        File.WriteAllText($@"print\\{item.ProductID}.html", newHTMLData);
-                                        break;
-
-                                    case "PRINT-OPSIGELSE":
-                                        htmlData = File.ReadAllText(@"templates\\PRINT-OPGRADE.html");
-                                        newHTMLData = htmlData.Replace("[Name]", plukliste.Name);
-                                        newHTMLData = newHTMLData.Replace("[Adresse]", plukliste.Adresse);
-                                        newHTMLData = newHTMLData.Replace("[Plukliste]", PrintPluklistItems(plukliste));
-                                        File.WriteAllText($@"print\\{item.ProductID}.html", newHTMLData);
-                                        break;
-
-                                    case "PRINT-WELCOME":
-                                        htmlData = File.ReadAllText(@"templates\\PRINT-OPGRADE.html");
-                                        newHTMLData = htmlData.Replace("[Name]", plukliste.Name);
-                                        newHTMLData = newHTMLData.Replace("[Adresse]", plukliste.Adresse);
-                                        newHTMLData = newHTMLData.Replace("[Plukliste]", PrintPluklistItems(plukliste));
-                                        File.WriteAllText($@"print\\{item.ProductID}.html", newHTMLData);
-                                        break;
+                                    var templateContent = fileService.ReadTemplate(templateName);
+                                    var rendered = templateRender.RenderFromTemplate(templateContent, plukliste);
+                                    fileService.WritePrintOutput($"{item.ProductID}.html", rendered);
+                                }
+                                catch (Exception tex)
+                                {
+                                    Console.WriteLine($"Failed to render/write template for {item.ProductID}: {tex.Message}");
                                 }
                             }
                         }
-                        //Move files to import directory
-                        var filewithoutPath = files[index].Substring(files[index].LastIndexOf('\\'));
-                        File.Move(files[index], string.Format(@"import\\{0}", filewithoutPath));
-                        Console.WriteLine($"Plukseddel {files[index]} afsluttet.");
-                        files.Remove(files[index]);
-                        if (index == files.Count) index--;
-                        goto InitFile;
+
+                        try
+                        {
+                            fileService.MoveToImport(filePath);
+                        }
+                        catch (Exception mx)
+                        {
+                            Console.WriteLine($"Failed to move file to import: {mx.Message}");
+                            Console.WriteLine("Press any key to continue...");
+                            Console.ReadKey(true);
+                            break;
+                        }
+
+                        Console.WriteLine($"Plukseddel {Path.GetFileName(filePath)} afsluttet.");
+                        files.RemoveAt(index);
+                        if (index >= files.Count) index = Math.Max(0, files.Count - 1);
+                        Console.WriteLine("Press any key to continue...");
+                        Console.ReadKey(true);
+                        break;
+
                     case "Quit":
-                        Directory.Delete("import", true);
+                        fileService.DeleteImportIfEmptyOrForce(true);
                         return;
                 }
-            }
+            } // end while
         }
+
         static string PrintPluklistItems(Pluklist? plukliste)
         {
-            string result = "";
-            foreach (var item in plukliste.Lines)
-            {
-                result += $"<p>{item.Amount}x {item.Title} ({item.ProductID})</p>\n";
-            }
-            return result;
+            if (plukliste == null || plukliste.Lines == null) return string.Empty;
+            return string.Join(Environment.NewLine, plukliste.Lines.Select(item => $"<p>{item.Amount}x {item.Title} ({item.ProductID})</p>"));
         }
     }
 }
