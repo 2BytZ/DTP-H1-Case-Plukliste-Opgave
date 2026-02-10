@@ -1,56 +1,111 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
-using System.Text;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Linq;
 
 namespace FKTV_DAL
 {
     public class DataAccess
     {
+        private static string LocalDataPath =>
+            Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "Data", "Items.json"));
+
         public string GetData()
         {
-            var strPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().CodeBase);
-            string path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            path = Path.Combine(path, "Data", "Items.json");
-            return File.ReadAllText(path);
+            if (!File.Exists(LocalDataPath))
+                throw new FileNotFoundException("Local data file not found.", LocalDataPath);
+
+            return File.ReadAllText(LocalDataPath);
         }
 
         public void UpdateAmount(string json)
         {
-            string path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            path = Path.Combine(path, "Data", "Items.json");
-            File.WriteAllText(path, json); // this exe. json
+            var dir = Path.GetDirectoryName(LocalDataPath);
+            if (!Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
+
+            File.WriteAllText(LocalDataPath, json);
+        }
+
+        private static string? FindRepositoryRoot(string markerFolderName = "Story3_Lager")
+        {
+            var dir = new DirectoryInfo(AppContext.BaseDirectory);
+            while (dir != null)
+            {
+                if (dir.Name.Equals(markerFolderName, StringComparison.OrdinalIgnoreCase)
+                    || Directory.EnumerateFiles(dir.FullName, "*.sln").Any()
+                    || Directory.Exists(Path.Combine(dir.FullName, ".git")))
+                {
+                    return dir.FullName;
+                }
+
+                dir = dir.Parent;
+            }
+
+            return null;
         }
 
         public void SyncData(bool calledFromPluklist = false)
-        {   
-            if (calledFromPluklist == false)
+        {
+            try
             {
-                var strPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().CodeBase);
-                string path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                path = Path.Combine(path, "Data", "Items.json");
-                var FKTV_DALJson = Path.Combine(path.Substring(0, path.IndexOf("Story3_Lager")), "Story3_Lager\\FKTV_DAL\\Data\\Items.json"); //this json
-                var FKTVExeJson = File.ReadAllText(path); //database executable json
-                var PluklisteExeJson = Path.Combine(path.Substring(0, path.IndexOf("Story3_Lager")), "Story3_Lager\\DTP_Case_Plukliste_ConsoleApp\\bin\\Debug\\net10.0\\Data\\Items.json"); ; //plukliste executable json
+                var repoRoot = FindRepositoryRoot() ?? Path.GetFullPath(AppContext.BaseDirectory);
 
-                if (!File.ReadAllText(PluklisteExeJson).Equals(FKTVExeJson) || !FKTV_DALJson.Equals(FKTVExeJson))
+                if (!calledFromPluklist)
                 {
-                    File.WriteAllText(PluklisteExeJson, FKTVExeJson);
-                    File.WriteAllText(FKTV_DALJson, FKTVExeJson);
+                    // Change originates from this app (e.g., FKTV web app)
+                    var sourcePath = LocalDataPath;
+                    if (!File.Exists(sourcePath))
+                    {
+                        Console.Error.WriteLine($"SyncData: source file not found: {sourcePath}");
+                        return;
+                    }
+
+                    var sourceContent = File.ReadAllText(sourcePath);
+
+                    var fkTV_DAL_Path = Path.Combine(repoRoot, "FKTV_DAL", "Data", "Items.json");
+                    var pluklistePath = Path.Combine(repoRoot, "DTP_Case_Plukliste_ConsoleApp", "bin", "Debug", "net10.0", "Data", "Items.json");
+
+                    Directory.CreateDirectory(Path.GetDirectoryName(fkTV_DAL_Path) ?? string.Empty);
+                    Directory.CreateDirectory(Path.GetDirectoryName(pluklistePath) ?? string.Empty);
+
+                    var plukContent = File.Exists(pluklistePath) ? File.ReadAllText(pluklistePath) : null;
+                    var dalContent = File.Exists(fkTV_DAL_Path) ? File.ReadAllText(fkTV_DAL_Path) : null;
+
+                    // If either file differs from the source, overwrite it
+                    if (!string.Equals(plukContent, sourceContent, StringComparison.Ordinal) ||
+                        !string.Equals(dalContent, sourceContent, StringComparison.Ordinal))
+                    {
+                        File.WriteAllText(pluklistePath, sourceContent);
+                        File.WriteAllText(fkTV_DAL_Path, sourceContent);
+                    }
+                }
+                else
+                {
+                    // Change originates from Plukliste console app
+                    var pluklisteLocal = LocalDataPath;
+                    if (!File.Exists(pluklisteLocal))
+                    {
+                        Console.Error.WriteLine($"SyncData (from pluklist): source file not found: {pluklisteLocal}");
+                        return;
+                    }
+
+                    var content = File.ReadAllText(pluklisteLocal);
+
+                    var fkTVExePath = Path.Combine(repoRoot, "FKTV", "bin", "Debug", "net10.0", "Data", "Items.json");
+                    var fkTV_DAL_Path = Path.Combine(repoRoot, "FKTV_DAL", "Data", "Items.json");
+
+                    Directory.CreateDirectory(Path.GetDirectoryName(fkTVExePath) ?? string.Empty);
+                    Directory.CreateDirectory(Path.GetDirectoryName(fkTV_DAL_Path) ?? string.Empty);
+
+                    File.WriteAllText(fkTVExePath, content);
+                    File.WriteAllText(fkTV_DAL_Path, content);
                 }
             }
-            else if (calledFromPluklist == true)
+            catch (Exception ex)
             {
-                var PluklisteExeJson = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Data","Items.json");
-                var FKTVExeJson = Path.Combine(PluklisteExeJson.Substring(0, PluklisteExeJson.IndexOf("Story3_Lager")), "Story3_Lager\\FKTV\\bin\\Debug\\net10.0\\Data\\Items.json"); //plukliste executable json
-                var FKTV_DALJson = Path.Combine(PluklisteExeJson.Substring(0, PluklisteExeJson.IndexOf("Story3_Lager")), "Story3_Lager\\FKTV_DAL\\Data\\Items.json"); //this json
-                File.WriteAllText(FKTVExeJson, File.ReadAllText(PluklisteExeJson));
-                File.WriteAllText(FKTV_DALJson, File.ReadAllText(PluklisteExeJson));
-
+                Console.Error.WriteLine($"SyncData failed: {ex.Message}");
+                throw;
             }
-
         }
     }
 }
