@@ -21,6 +21,10 @@ namespace Plukliste
 
             Console.WriteLine("\n{0, -13}{1}", "Name:", plukliste.Name);
             Console.WriteLine("{0, -13}{1}", "Forsendelse:", plukliste.Forsendelse);
+            if (plukliste.Forsendelse != "Pickup")
+            {
+                Console.WriteLine("{0, -13}{1}", "To-Adresse:", plukliste.Adresse);
+            }
             Console.WriteLine("\n{0,-7}{1,-9}{2,-20}{3}", "Antal", "Type", "Produktnr.", "Navn");
 
             if (plukliste.Lines != null)
@@ -39,7 +43,8 @@ namespace Plukliste
             {
                 throw new ArgumentException("(!) Options must contain at least one item.", nameof(options));
             }
-            int selected = Math.Clamp(initialSelected, 0, options.Count - 1);
+            //find the selected option based on how much the initialSelected has risen (from 0)
+            int selected = Math.Clamp(initialSelected, 0, options.Count - 1); 
             ConsoleKeyInfo key;
 
             RenderOptions(options, selected);
@@ -50,10 +55,10 @@ namespace Plukliste
                 switch (key.Key)
                 {
                     case ConsoleKey.DownArrow:
-                        selected = (selected + 1) % options.Count;
+                        selected = (selected == options.Count - 1 ? 0 : selected + 1);   //this is too confusing to read --> (selected = (selected + 1) % options.Count;)
                         break;
                     case ConsoleKey.UpArrow:
-                        selected = (selected - 1 + options.Count) % options.Count;
+                        selected = (selected == 0 ? options.Count - 1 : selected - 1);
                         break;
                     case ConsoleKey.Enter:
                         // leave the cursor just after menu for clarity
@@ -69,9 +74,10 @@ namespace Plukliste
         {
             for (int i = 0; i < options.Count; i++)
             {
-                var prefix = i == selected ? "-> " : "   ";
-                var line = prefix + options[i];
-                Console.WriteLine(line.PadRight(Console.WindowWidth - 1));
+                //display the option with the cursor to the right of the selected
+                var cursor = i == selected ? "<-" : "  ";
+                var line = options[i] + cursor;
+                Console.WriteLine(line);
             }
         }
 
