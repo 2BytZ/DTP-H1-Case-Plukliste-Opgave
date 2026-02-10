@@ -1,5 +1,6 @@
 ﻿//Eksempel på funktionel kodning hvor der kun bliver brugt et model lag
 using FKTV_BLL;
+using FKTV_DAL;
 using System.Linq.Expressions;
 using System.Xml.Serialization;
 namespace Plukliste
@@ -46,10 +47,11 @@ namespace Plukliste
                     Console.WriteLine("{0, -13}{1}", "Forsendelse:", plukliste.Forsendelse);
                     //TODO: Add adresse to screen print
 
-                    Console.WriteLine("\n{0,-7}{1,-9}{2,-20}{3}", "Antal", "Type", "Produktnr.", "Navn");
+                    Console.WriteLine("\n{0,-7}{1,-9}{2,-20}{3,-32}{4}", "Antal", "Type", "Produktnr.", "Navn", "Paa Lager");
                     foreach (var item in plukliste.Lines)
                     {
-                        Console.WriteLine("{0,-7}{1,-9}{2,-20}{3}", item.Amount, item.Type, item.ProductID, item.Title);
+                        ItemsRepository storageAmount = new ItemsRepository();
+                        Console.WriteLine("{0,-7}{1,-9}{2,-20}{3,-32}{4}", item.Amount, item.Type, item.ProductID, item.Title, storageAmount.GetStorageAmount(item.ProductID));
                     }
                 }
                 file.Close();
@@ -123,6 +125,8 @@ namespace Plukliste
                     foreach (var line in plukliste.Lines)
                     {
                         itemsRepository.UpdateAmount(line.ProductID, line.Amount, true);
+                        DataAccess access = new DataAccess();
+                        access.SyncData(true);
                     }
                     //Move files to import directory
                     var filewithoutPath = files[index].Substring(files[index].LastIndexOf('\\'));
@@ -130,6 +134,7 @@ namespace Plukliste
                     Console.WriteLine($"Plukseddel {files[index]} afsluttet.");
                     files.Remove(files[index]);
                     if (index == files.Count) index--;
+
                     goto InitFile;
                 case "Quit":
                     Directory.Delete("import", true);

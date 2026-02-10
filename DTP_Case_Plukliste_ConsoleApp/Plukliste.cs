@@ -1,4 +1,6 @@
-﻿namespace Plukliste;
+﻿using FKTV_DAL;
+
+namespace Plukliste;
 
 public class Pluklist
 {
@@ -15,6 +17,7 @@ public class Item
     public string Title;
     public ItemType Type;
     public int Amount;
+    public int AmountInStorage;
 }
 
 public enum ItemType

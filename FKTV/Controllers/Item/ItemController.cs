@@ -2,6 +2,7 @@
 using FKTV.Models.Items;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using FKTV_DAL;
 
 namespace FKTV.Controllers.Item
 {
@@ -73,7 +74,8 @@ namespace FKTV.Controllers.Item
             try
             {
                 ItemsRepository itemsRepository = new ItemsRepository();
-                itemsRepository.UpdateAmount(collection.ProductID, collection.Amount);
+                itemsRepository.UpdateAmount(collection.ProductID, collection.Amount, false);
+
                 return RedirectToAction(nameof(Index));
             }
             catch

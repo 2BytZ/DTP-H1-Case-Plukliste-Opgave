@@ -1,3 +1,5 @@
+using FKTV_DAL;
+
 namespace FKTV
 {
     public class Program
@@ -29,6 +31,9 @@ namespace FKTV
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}")
                 .WithStaticAssets();
+
+            DataAccess access = new DataAccess();
+            access.SyncData(false);
 
             app.Run();
         }

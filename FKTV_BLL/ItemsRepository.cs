@@ -22,11 +22,11 @@ namespace FKTV_BLL
             return JsonSerializer.Deserialize<List<StoreItem>>(json);
         }
 
-        public void UpdateAmount(string productID, int amount, bool pluklisteUpdate = false)
+        public void UpdateAmount(string productID, int amount, bool isCalledFromPlukliste = false)
         {
             List<StoreItem> storeItems = GetItems();
             StoreItem storeItem = storeItems.FirstOrDefault(i => i.ProductID == productID);
-            if (pluklisteUpdate == true) 
+            if (isCalledFromPlukliste == true) 
             { 
                 storeItem.Amount -= amount;
             }
@@ -34,9 +34,16 @@ namespace FKTV_BLL
             {
                 storeItem.Amount = amount;
             }
-                string json = JsonSerializer.Serialize(storeItems);
+            string json = JsonSerializer.Serialize(storeItems);
             DataAccess dataAccess = new DataAccess();
             dataAccess.UpdateAmount(json);
+        }
+
+        public int GetStorageAmount(string productID)
+        {
+            List<StoreItem> storeItems = GetItems();
+            StoreItem item = storeItems.FirstOrDefault(i => i.ProductID == productID);
+            return item.Amount;
         }
     }
 }
