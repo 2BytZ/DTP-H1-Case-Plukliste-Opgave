@@ -33,7 +33,7 @@ namespace FKTV
                 .WithStaticAssets();
 
             DataAccess access = new DataAccess();
-            access.SyncData(false);
+            access.SyncData(false); //sync all data at runtime across whole solution
 
             app.Run();
         }

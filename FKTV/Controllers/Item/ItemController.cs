@@ -12,16 +12,18 @@ namespace FKTV.Controllers.Item
         public ActionResult Index()
         {
             ItemsRepository itemsRepository = new ItemsRepository();
-            List<StoreItem> storeItems = itemsRepository.GetItems();
+            //store items from the html database
+            List<StoreItem> storeItems = itemsRepository.GetItems(); //get items from html database
             List<Models.Items.Item> items = new List<Models.Items.Item>();
+            //create a model item with the data of each html database item
             foreach (var item in storeItems)
             {
-                Models.Items.Item I = new Models.Items.Item();
-                I.ProductID = item.ProductID;
-                I.Title = item.Title;
-                I.Type = item.Type;
-                I.Amount = item.Amount;
-                items.Add(I);
+                Models.Items.Item modelItem = new Models.Items.Item();
+                modelItem.ProductID = item.ProductID;
+                modelItem.Title = item.Title;
+                modelItem.Type = item.Type;
+                modelItem.Amount = item.Amount;
+                items.Add(modelItem);
             }
             return View(items);
         }
@@ -56,14 +58,15 @@ namespace FKTV.Controllers.Item
         // GET: ItemController/Edit/5
         public ActionResult Edit(string id)
         {
+            //get item info and display in editor
             ItemsRepository itemsRepository = new ItemsRepository();
             StoreItem storeItem = itemsRepository.GetItem(id);
-            Models.Items.Item I = new Models.Items.Item();
-            I.ProductID = storeItem.ProductID;
-            I.Title = storeItem.Title;
-            I.Type = storeItem.Type;
-            I.Amount = storeItem.Amount;
-            return View(I);
+            Models.Items.Item modelItem = new Models.Items.Item();
+            modelItem.ProductID = storeItem.ProductID;
+            modelItem.Title = storeItem.Title;
+            modelItem.Type = storeItem.Type;
+            modelItem.Amount = storeItem.Amount;
+            return View(modelItem);
         }
 
         // POST: ItemController/Edit/5
@@ -74,7 +77,7 @@ namespace FKTV.Controllers.Item
             try
             {
                 ItemsRepository itemsRepository = new ItemsRepository();
-                itemsRepository.UpdateAmount(collection.ProductID, collection.Amount, false);
+                itemsRepository.UpdateAmount(collection.ProductID, collection.Amount, false); //update the item amount in html database
 
                 return RedirectToAction(nameof(Index));
             }
