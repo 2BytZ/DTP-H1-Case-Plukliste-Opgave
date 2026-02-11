@@ -1,0 +1,45 @@
+:root {
+  --fc-padding-y: 0.375rem;
+  --fc-padding-x: 0.75rem;
+}
+
+/* A select that looks like .form-control but preserves the native arrow (Chromium/Blink) */
+.form-control-select {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+
+  /* spacing like .form-control */
+  padding: var(--fc-padding-y) var(--fc-padding-x);
+  padding-right: 2.5rem; /* reserve room for native arrow */
+
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--bs-body-color, #212529);
+  background-color: var(--bs-body-bg, #fff);
+
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  border-radius: var(--bs-border-radius, 0.375rem);
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+
+  /* Force use of the native select rendering / arrow on Chromium */
+  -webkit-appearance: menulist-button !important;
+  -moz-appearance: menulist-button !important;
+  appearance: menulist-button !important;
+}
+
+/* Focus state similar to .form-control */
+.form-control-select:focus {
+  outline: 0;
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.25rem rgba(13,110,253,0.25);
+}
+
+/* Make sure IE/Edge expand arrow remains visible */
+.form-control-select::-ms-expand {
+  display: block !important;
+}
+
+/* small / large helpers */
+.form-control-select.form-control-sm { padding: 0.25rem 0.5rem; font-size: .875rem; }
+.form-control-select.form-control-lg { padding: 0.5rem 1rem; font-size: 1.25rem; }

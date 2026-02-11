@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/FKTV.styles.css" asp-append-version="true" />
+    <link href="~/lib/bootstrap/dist/css/bootstrap.css" rel="stylesheet" />
+    <link href="~/css/form-control-select.css" rel="stylesheet" />
 </head>
 <body>
     <header>
@@ -28,6 +30,9 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Item" asp-action="Index">Storage</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Plukliste" asp-action="Index">Plukliste</a>
                         </li>
 
                     </ul>
@@ -52,3 +57,4 @@
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
+
