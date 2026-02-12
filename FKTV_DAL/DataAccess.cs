@@ -49,7 +49,10 @@ namespace FKTV_DAL
 
         // Public property to resolve the console-app export folder inside the repository
         public string GetPluklistExportFolder =>
-            Path.GetFullPath(Path.Combine(FindRepositoryRoot() ?? AppContext.BaseDirectory, "DTP_Case_Plukliste_ConsoleApp", "export"));
+            Path.GetFullPath(Path.Combine(FindRepositoryRoot() ?? AppContext.BaseDirectory, "FKTV_DAL", "export"));
+
+        public string PluklistImportLocation =>
+            Path.Combine(FindRepositoryRoot() ?? AppContext.BaseDirectory, "FKTV_DAL", "import");
 
         public string GetData()
         {

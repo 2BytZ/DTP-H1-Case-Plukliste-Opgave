@@ -1,0 +1,83 @@
+﻿@using FKTV_BLL
+@using FKTV_DAL
+@using FKTV.Models.Items
+@model FKTV.Models.Plukliste.Plukliste
+
+@{
+    ViewData["Title"] = "Index";
+
+    var files = ViewBag.Files as List<string> ?? new List<string>();
+    int index = ViewBag.Index is int i ? i : 0;
+    ItemsRepository storageAmount = new ItemsRepository();
+    var error = ViewBag.Error as string;
+}
+
+<h1>Administrer Pluksedler</h1>
+
+@if (!string.IsNullOrEmpty(error))
+{
+    <div class="alert alert-warning">@error</div>
+}
+
+@if (files.Count == 0)
+{
+    <p>No pluksedler found in the export folder.</p>
+}
+else
+{
+    <div>
+        <div class="row">
+            <div>
+                <p>
+                    Plukliste @(index + 1) af @(files.Count)
+                </p>
+                <p>
+                    file: @(files[index])
+                </p>
+            </div>
+            <div>
+                <p>Name: @Model.Name</p>
+                <p>Forsendelse: @Model.Forsendelse</p>
+                <p>Adresse: @Model.Adresse</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Antal</th>
+                            <th>Type</th>
+                            <th>Produktnr.</th>
+                            <th>Navn</th>
+                            <th>På lager</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model?.Lines ?? Enumerable.Empty<Item>())
+                        {
+                            <tr>
+                                <td>@item.Amount</td>
+                                <td>@item.Type</td>
+                                <td>@item.ProductID</td>
+                                <td>@item.Title</td>
+                                <td>@storageAmount.GetStorageAmount(item.ProductID)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+@if (index >= 0 == true)
+{
+    <button asp-action="AfslutPlukseddel">End Plukseddel</button>
+}
+@if (index > 0 == true)
+{
+    <button asp-action="Previous">Previous Plukseddel</button>
+}
+@if (index < files.Count - 1 == true)
+{
+    <button asp-action="Next">Next Plukseddel</button>
+}
+
+
+
