@@ -7,9 +7,6 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 	<ItemGroup>
-		<Folder Include="export\" />
-	</ItemGroup>
-	<ItemGroup>
 	  <ProjectReference Include="..\FKTV_BLL\FKTV_BLL.csproj" />
 	</ItemGroup>
 	<ItemGroup>

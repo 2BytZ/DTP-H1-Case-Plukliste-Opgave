@@ -2,6 +2,8 @@
 using FKTV_BLL;
 using FKTV_DAL;
 using System.Linq.Expressions;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 namespace Plukliste
 
@@ -43,11 +45,24 @@ namespace Plukliste
                 Console.WriteLine($"file: {files[index]}"); //display file name
 
                 FileStream file = File.OpenRead(files[index]);
-                //create an xmlSerializer of type Pluklist
-                XmlSerializer xmlSerializer = new XmlSerializer(typeof(Pluklist));
-                //put file list items, parsed as type Pluklist, into plukliste list
-                plukliste = (Pluklist?)xmlSerializer.Deserialize(file); //Deserialize list items in file list
-
+                if (Path.GetExtension(files[index]).ToUpper() == ".JSON")
+                {
+                    using var streamRead = new StreamReader(file);
+                    var json = streamRead.ReadToEnd();
+                    var serialOptions = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true,
+                        Converters = { new JsonStringEnumConverter() }
+                    };
+                    plukliste = JsonSerializer.Deserialize<Pluklist>(json, serialOptions);
+                }
+                else
+                {
+                    //create an xmlSerializer of type Pluklist
+                    XmlSerializer xmlSerializer = new XmlSerializer(typeof(Pluklist));
+                    //put file list items, parsed as type Pluklist, into plukliste list
+                    plukliste = (Pluklist?)xmlSerializer.Deserialize(file); //Deserialize list items in file list
+                }
                 if (plukliste != null && plukliste.Lines != null)
                 {
                     Console.WriteLine("\n{0, -13}{1}", "Name:", plukliste.Name); //display Name of persons order

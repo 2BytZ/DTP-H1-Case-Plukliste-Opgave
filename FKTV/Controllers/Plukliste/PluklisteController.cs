@@ -1,5 +1,7 @@
 ﻿using AspNetCoreGeneratedDocument;
 using FKTV.Models.Plukliste;
+using FKTV_BLL;
+using FKTV_DAL;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
@@ -34,7 +36,12 @@ namespace FKTV.Controllers.Plukliste
         public ActionResult Create(Models.Plukliste.Plukliste plukseddel)
         {
             string inputData = JsonSerializer.Serialize(plukseddel);
-
+            DataAccess access = new DataAccess();
+            //Update storage
+            ItemsRepository itemsRepository = new ItemsRepository();
+            string exportDir = access.GetPluklistExportFolder;
+            var orderNum = DateTime.Now.ToString("yyyyMMddHHmmss");
+            System.IO.File.WriteAllText(Path.Combine(exportDir, $"{orderNum}_export.json"), inputData);
             return RedirectToAction(nameof(Index));
         }
 

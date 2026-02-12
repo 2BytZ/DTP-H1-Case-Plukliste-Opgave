@@ -9,7 +9,7 @@
     "ProductID": "PRINT-WELCOME",
     "Title": "Velkomstbrev",
     "Type": "Print",
-    "Amount": 20
+    "Amount": 14
   },
   {
     "ProductID": "PRINT-OPSIGELSE",
@@ -37,8 +37,8 @@
   },
   {
     "ProductID": "TX-302587",
-    "Title": "Triax TD 241E stikd\u00E5se",
+    "Title": "Triax TD 241E stikdaase",
     "Type": "Fysisk",
-    "Amount": 20
+    "Amount": 7
   }
 ]
