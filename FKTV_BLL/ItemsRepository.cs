@@ -38,7 +38,7 @@ namespace FKTV_BLL
                 //decrease item amount in html database if it's called from the pluklist program
                 storeItem.Amount -= amount;
                 //set the amount to zero to prevent amount going into negatives
-                //if (storeItem.Amount < 0) storeItem.Amount = 0;
+                if (storeItem.Amount < 0) storeItem.Amount = 0;
             }
             else
             {
@@ -69,7 +69,7 @@ namespace FKTV_BLL
         {
             //get the amount of item in storage from html database
             var storeItems = GetItems();
-            var item = storeItems.FirstOrDefault(i => i.ProductID == productID);
+            var item = storeItems.FirstOrDefault(item => item.ProductID == productID);
             return item?.Amount ?? 0; //return amount, unless it's null, then return zero
         }
     }

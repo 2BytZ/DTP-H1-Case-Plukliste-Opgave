@@ -42,6 +42,12 @@ namespace FKTV.Controllers.Plukliste
             string exportDir = access.GetPluklistExportFolder;
             var orderNum = DateTime.Now.ToString("yyyyMMddHHmmss");
             System.IO.File.WriteAllText(Path.Combine(exportDir, $"{orderNum}_export.json"), inputData);
+            foreach (var line in plukseddel.Lines)
+            {
+                //update the database for the amount in lager
+                itemsRepository.UpdateAmount(line.ProductID, line.Amount, true);
+                access.SyncData(true); //sync data so it matches across html and pluklist
+            }
             return RedirectToAction(nameof(Index));
         }
 
