@@ -15,6 +15,11 @@ namespace FKTV.Controllers.Plukliste
         {
             return View();
         }
+        public ActionResult Pluksedler()
+        {
+            return View();
+        }
+
 
         // GET: PluklistController/Details/5
         public ActionResult Details(int id)

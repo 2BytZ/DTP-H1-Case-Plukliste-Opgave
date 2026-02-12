@@ -7,7 +7,7 @@
 
 <h1>Lav en plukseddel til tilføjelse af Pluklisten</h1>
 
-<h4>Plukseddel</h4>
+<h4>Plukseddel oprettelse</h4>
 <hr />
 <form asp-action="Create" method="post">
     <div class="row">
@@ -79,6 +79,9 @@
         <input type="submit" value="Create" class="btn btn-primary" />
     </div>
 </form>
+<div>
+    <a asp-action="Pluksedler">Go to Pluksedler</a>
+</div>
 
 <!-- Hidden template: uses __index__ placeholder which JS replaces with the next index -->
 <div id="item-template" style="display:none">
