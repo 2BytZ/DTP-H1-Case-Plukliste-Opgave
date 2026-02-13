@@ -36,6 +36,7 @@ namespace FKTV
             access.SyncData(false); //sync all data at runtime across whole solution
 
             app.Run();
+            System.IO.File.Delete("FKTV_DAL\\import");
         }
     }
 }

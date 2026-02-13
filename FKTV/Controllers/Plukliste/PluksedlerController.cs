@@ -7,8 +7,12 @@ namespace FKTV.Controllers.Plukliste
 {
     public class PluksedlerController : Controller
     {
-        public IActionResult Pluksedler(int index = 0)
+        public IActionResult Pluksedler(int index)
         {
+            if (index == null)
+            {
+                index = 0;
+            }
             var data = new DataAccess();
 
             // Ensure import folder exists (the view used this previously)
@@ -59,6 +63,30 @@ namespace FKTV.Controllers.Plukliste
             // Non-JSON files are unsupported here; surface a message and return empty model
             ViewBag.Error = $"Unsupported plukliste file format: {Path.GetExtension(path)}";
             return View(new Models.Plukliste.Plukliste());
+        }
+        public IActionResult Next(int index)
+        {
+            index++;
+            return RedirectToAction(nameof(Pluksedler), new { index });
+        }
+        public IActionResult Previous(int index)
+        {
+            if (index > 0)
+            {
+                index--;
+            }
+            return RedirectToAction(nameof(Pluksedler), new { index });
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult AfslutPlukseddel(List<string> files, int index)
+        {
+            DataAccess access = new DataAccess();
+            var _files = Directory.EnumerateFiles(access.GetPluklistExportFolder).ToList();
+            System.IO.File.Move(_files[index], Path.Combine(access.PluklistImportLocation, _files[index]));
+            files.Remove(_files[index]);
+            if (index == _files.Count) index--;
+            return RedirectToAction(nameof(Pluksedler), new { index });
         }
     }
 }

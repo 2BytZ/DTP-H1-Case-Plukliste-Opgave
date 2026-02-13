@@ -9,7 +9,7 @@
     var files = ViewBag.Files as List<string> ?? new List<string>();
     int index = ViewBag.Index is int i ? i : 0;
     ItemsRepository storageAmount = new ItemsRepository();
-    var error = ViewBag.Error as string;
+    var error = ViewBag.Error as string ?? TempData["Error"] as string;
 }
 
 <h1>Administrer Pluksedler</h1>
@@ -66,18 +66,18 @@ else
         </div>
     </div>
 }
-@if (index >= 0 == true)
-{
-    <button asp-action="AfslutPlukseddel">End Plukseddel</button>
-}
-@if (index > 0 == true)
-{
-    <button asp-action="Previous">Previous Plukseddel</button>
-}
-@if (index < files.Count - 1 == true)
-{
-    <button asp-action="Next">Next Plukseddel</button>
-}
 
+<form asp-action="AfslutPlukseddel" method="post" class="d-inline">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="index" value="@index" />
+    <button type="submit" class="btn btn-primary">End Plukseddel</button>
+</form>
 
-
+@if (index > 0)
+{
+    <a asp-action="Previous" asp-route-index="@index" class="btn btn-secondary">Previous Plukseddel</a>
+}
+@if (index < files.Count - 1)
+{
+    <a asp-action="Next" asp-route-index="@index" class="btn btn-secondary">Next Plukseddel</a>
+}
